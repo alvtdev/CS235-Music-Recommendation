@@ -2,34 +2,41 @@ import spotipy
 import spotipy.util as util
 import sys
 import os
+import pprint
 from spotipy.oauth2 import SpotifyClientCredentials
 
 scope = 'user-library-read'
+
+def getArtistGenres(uri, sp):
+    artist = sp.artist(uri)
+    return artist['genres']
+
+def getAlbumGenres(uri, sp):
+    album = sp.album(uri)
+    return album['genres']
 
 def getSavedMusic():
     #get id & secret locally stored on device
     #client_id = os.getenv('SPOTIPY_CLIENT_ID')
     #client_secret = os.getenv('SPOTIPY_CLIENT_SECRET')
     #user authentication
-    '''
     if len(sys.argv) > 1:
         username = sys.argv[1]
     else:
-        print("Usage: %s username" % sys.argv[0])
-        sys.exit()
-    '''
-    print "Enter your Spotify username: ",
-    username = raw_input()
+        print "Enter your Spotify username: ",
+        username = raw_input()
 
     token = util.prompt_for_user_token(username, scope)
 
     if token:
         sp = spotipy.Spotify(auth=token)
-        results = sp.current_user_saved_tracks()
-        for item in results['items']:
+        track_results = sp.current_user_saved_tracks()
+        for item in track_results['items']:
             track = item['track']
             print track['name'] + ' - ' + track['artists'][0]['name'] + ' - ',
-            print track['album']['name'] + ' - ' + track['artists'][0]['uri']
+            print track['album']['name'] + ' - ',
+            genres = getArtistGenres(track['artists'][0]['uri'], sp)
+            print genres
             #print track
             #print "\n"
     else:
