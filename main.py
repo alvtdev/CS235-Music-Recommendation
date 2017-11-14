@@ -3,7 +3,9 @@ import spotipy.util as util
 import sys
 import os
 import pprint
+import json
 from spotipy.oauth2 import SpotifyClientCredentials
+from spotipy.oauth2 import SpotifyOAuth
 
 scope = 'user-library-read'
 
@@ -15,21 +17,19 @@ def getAlbumGenres(uri, sp):
     album = sp.album(uri)
     return album['genres']
 
-def getSavedMusic():
+def getSavedMusic(sp, token):
     #get id & secret locally stored on device
-    #client_id = os.getenv('SPOTIPY_CLIENT_ID')
-    #client_secret = os.getenv('SPOTIPY_CLIENT_SECRET')
-    #user authentication
-    if len(sys.argv) > 1:
-        username = sys.argv[1]
-    else:
-        print "Enter your Spotify username: ",
-        username = raw_input()
+    client_id = os.getenv('SPOTIPY_CLIENT_ID')
+    client_secret = os.getenv('SPOTIPY_CLIENT_SECRET')
+    client_uri = os.getenv('SPOTIPY_REDIRECT_URI')
 
-    token = util.prompt_for_user_token(username, scope)
+    #user authentication
+    oauth = SpotifyOAuth(client_id, client_secret, client_uri)
+
+    if oauth._is_token_expired(token):
+        oauth.refresh_access_token(token)
 
     if token:
-        sp = spotipy.Spotify(auth=token)
         track_results = sp.current_user_saved_tracks()
         for item in track_results['items']:
             track = item['track']
@@ -43,7 +43,15 @@ def getSavedMusic():
         print "Can't get token for", username
 
 def main():
-    getSavedMusic()
+    if len(sys.argv) > 1:
+        username = sys.argv[1]
+    else:
+        print "Enter your Spotify username: ",
+        username = raw_input()
+
+    token = util.prompt_for_user_token(username, scope)
+    sp = spotipy.Spotify(auth=token)
+    getSavedMusic(sp, token)
 '''
     credentials = SpotifyClientCredentials(client_id=client_id,
             client_secret=client_secret)
