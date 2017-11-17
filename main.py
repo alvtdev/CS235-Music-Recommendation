@@ -14,6 +14,7 @@ client_id = os.getenv('SPOTIPY_CLIENT_ID')
 client_secret = os.getenv('SPOTIPY_CLIENT_SECRET')
 client_uri = os.getenv('SPOTIPY_REDIRECT_URI')
 cache = ""
+username = "" 
 
 def getArtistGenres(uri, sp):
     artist = sp.artist(uri)
@@ -23,10 +24,41 @@ def getAlbumGenres(uri, sp):
     album = sp.album(uri)
     return album['genres']
 
-def getSavedMusic(sp):
+def printTracks(sp, tracks):
+    i = 1
+    while True:
+        for item in tracks['items']:
+            track = item['track']
+            song_title = str(i) + '. ' + track['name'] +' - '
+            song_title += track['artists'][0]['name']
+            print(song_title)
+            i += 1
+        #check if there are more pages
+        if tracks['next']:
+            tracks = sp.next(tracks)
+        else: 
+            break
 
-    #if oauth._is_token_expired(token):
-    #   oauth.refresh_access_token(token)
+def printPlaylist(sp, playlist):
+    results = sp.user_playlist(playlist['owner']['id'], playlist['id'], fields='tracks,next')
+    tracks = results['tracks']
+    printTracks(sp, tracks)
+
+def getPlaylists(sp, username):
+    playlists = sp.user_playlists(username)
+    while True:
+        for playlist in playlists['items']:
+            if playlist['name'] is not None:
+                print '\nplaylist: '
+                playlist_name = playlist['name']
+                print playlist_name
+                printPlaylist(sp, playlist)
+        if playlists['next']:
+            playlists = sp.next(playlists)
+        else:
+            break
+
+def getSavedMusic(sp):
     track_results = sp.current_user_saved_tracks(limit=50)
     for item in track_results['items']:
         track = item['track']
@@ -37,8 +69,8 @@ def getSavedMusic(sp):
         #print track
         #print "\n"
 
-#@route('/')
 def main():
+    username = ""
     if len(sys.argv) > 1:
         username = sys.argv[1]
     else:
@@ -46,6 +78,15 @@ def main():
         username = raw_input()
 
     cache = '.cache-' + username
+
+    """
+    token = ""
+    token = util.prompt_for_user_token(username)
+    if token:
+        sp = spotipy.Spotify(auth=token)
+        getPlaylists(sp, username)
+        #getSavedMusic(sp)
+    """
     oauth = SpotifyOAuth(client_id, client_secret, client_uri, scope=scope, cache_path=cache)
     token = ""
     token_info = oauth.get_cached_token()
@@ -61,9 +102,11 @@ def main():
         if code:
             token_info = oauth.get_access_token(code)
             token = token_info['access_token']
+    if token:
+        sp = spotipy.Spotify(auth=token)
+        getPlaylists(sp, username)
+        #getSavedMusic(sp)
 
-    sp = spotipy.Spotify(auth=token)
-    getSavedMusic(sp)
 
 
 '''
