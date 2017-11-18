@@ -15,6 +15,13 @@ client_secret = os.getenv('SPOTIPY_CLIENT_SECRET')
 client_uri = os.getenv('SPOTIPY_REDIRECT_URI')
 cache = ""
 username = "" 
+if len(sys.argv) > 1:
+    username = sys.argv[1]
+else:
+    print "Enter your Spotify username: ",
+    username = raw_input()
+
+cache = '.cache-' + username
 
 def getArtistGenres(uri, sp):
     artist = sp.artist(uri)
@@ -24,14 +31,19 @@ def getAlbumGenres(uri, sp):
     album = sp.album(uri)
     return album['genres']
 
-def printTracks(sp, tracks):
+def printTrackDetails(sp, tracks):
     i = 1
     while True:
         for item in tracks['items']:
             track = item['track']
-            song_title = str(i) + '. ' + track['name'] +' - '
-            song_title += track['artists'][0]['name']
-            print(song_title)
+            print track['name'] + ' - ' + track['artists'][0]['name'] + ' - ',
+            print track['album']['name'] + ' - ',
+            genres = getArtistGenres(track['artists'][0]['uri'], sp)
+            genreList = [genre.encode('UTF8') for genre in genres]
+            print genreList
+            #song_title = str(i) + '. ' + track['name'] +' - '
+            #song_title += track['artists'][0]['name']
+            #print(song_title)
             i += 1
         #check if there are more pages
         if tracks['next']:
@@ -39,10 +51,38 @@ def printTracks(sp, tracks):
         else: 
             break
 
+#function to generate a comma delimited file with data
+def printTracksToFile(sp, tracks):
+    i = 1
+    filename = "playlists-" + username + ".txt"
+    F = open(filename, "w")
+    F.write("Song Name, Artist Name, Album Name, Genres\n")
+    while True:
+        for item in tracks['items']:
+            track = item['track']
+            trackdata = track['name'] + ", " + track['artists'][0]['name']
+            trackdata += ', ' + track['album']['name'] + ', '
+            genres = getArtistGenres(track['artists'][0]['uri'], sp)
+            genreList = [genre.encode('UTF8') for genre in genres]
+            for genre in genres:
+                trackdata += genre + ", " 
+
+            trackdata = trackdata[:-1]
+            print trackdata
+            F.write(trackdata + "\n")
+            i += 1
+        #check if there are more pages
+        if tracks['next']:
+            tracks = sp.next(tracks)
+        else: 
+            break
+    F.close()
+
 def printPlaylist(sp, playlist):
     results = sp.user_playlist(playlist['owner']['id'], playlist['id'], fields='tracks,next')
     tracks = results['tracks']
-    printTracks(sp, tracks)
+    #printTrackDetails(sp, tracks)
+    printTracksToFile(sp, tracks)
 
 def getPlaylists(sp, username):
     playlists = sp.user_playlists(username)
@@ -70,14 +110,6 @@ def getSavedMusic(sp):
         #print "\n"
 
 def main():
-    username = ""
-    if len(sys.argv) > 1:
-        username = sys.argv[1]
-    else:
-        print "Enter your Spotify username: ",
-        username = raw_input()
-
-    cache = '.cache-' + username
 
     """
     token = ""
