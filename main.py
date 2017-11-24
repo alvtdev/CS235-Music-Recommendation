@@ -6,15 +6,17 @@ import sys
 import os
 import pprint
 import json
-from bottle import route, run, request
 
 #global vars necessary for spotipy functions
+playlistsfile = "plsongs.tsv"
+topsongsfile = "topsongs.txt"
 scope = 'user-library-read'
 client_id = os.getenv('SPOTIPY_CLIENT_ID')
 client_secret = os.getenv('SPOTIPY_CLIENT_SECRET')
 client_uri = os.getenv('SPOTIPY_REDIRECT_URI')
 cache = ""
 username = "" 
+
 if len(sys.argv) > 1:
     username = sys.argv[1]
 else:
@@ -33,6 +35,7 @@ def getAlbumGenres(uri, sp):
 
 def printTrackDetails(sp, tracks):
     i = 1
+    
     while True:
         for item in tracks['items']:
             track = item['track']
@@ -52,23 +55,21 @@ def printTrackDetails(sp, tracks):
             break
 
 #function to generate a comma delimited file with data
-def printTracksToFile(sp, tracks):
+def printTracksToFile(sp, tracks, F):
     i = 1
-    filename = "playlists-" + username + ".txt"
-    F = open(filename, "w")
-    F.write("Song Name, Artist Name, Album Name, Genres\n")
+    F.write("Song Name \t Artist Name \t Album Name \t Genres\n")
     while True:
         for item in tracks['items']:
             track = item['track']
-            trackdata = track['name'] + ", " + track['artists'][0]['name']
-            trackdata += ', ' + track['album']['name'] + ', '
+            trackdata = track['name'] + "\t" + track['artists'][0]['name']
+            trackdata += '\t' + track['album']['name'] + '\t'
             genres = getArtistGenres(track['artists'][0]['uri'], sp)
             genreList = [genre.encode('UTF8') for genre in genres]
             for genre in genres:
                 trackdata += genre + ", " 
 
             trackdata = trackdata[:-1]
-            print trackdata
+            #print trackdata
             F.write(trackdata + "\n")
             i += 1
         #check if there are more pages
@@ -76,49 +77,31 @@ def printTracksToFile(sp, tracks):
             tracks = sp.next(tracks)
         else: 
             break
-    F.close()
 
-def printPlaylist(sp, playlist):
+def printPlaylist(sp, playlist, F):
     results = sp.user_playlist(playlist['owner']['id'], playlist['id'], fields='tracks,next')
     tracks = results['tracks']
     #printTrackDetails(sp, tracks)
-    printTracksToFile(sp, tracks)
+    printTracksToFile(sp, tracks, F)
 
 def getPlaylists(sp, username):
     playlists = sp.user_playlists(username)
+    filename = "playlists-" + username + ".txt"
+    F = open(filename, "w")
     while True:
         for playlist in playlists['items']:
             if playlist['name'] is not None:
                 print '\nplaylist: '
                 playlist_name = playlist['name']
                 print playlist_name
-                printPlaylist(sp, playlist)
+                printPlaylist(sp, playlist, F)
         if playlists['next']:
             playlists = sp.next(playlists)
         else:
             break
-
-def getSavedMusic(sp):
-    track_results = sp.current_user_saved_tracks(limit=50)
-    for item in track_results['items']:
-        track = item['track']
-        print track['name'] + ' - ' + track['artists'][0]['name'] + ' - ',
-        print track['album']['name'] + ' - ',
-        genres = getArtistGenres(track['artists'][0]['uri'], sp)
-        print genres
-        #print track
-        #print "\n"
+    F.close()
 
 def main():
-
-    """
-    token = ""
-    token = util.prompt_for_user_token(username)
-    if token:
-        sp = spotipy.Spotify(auth=token)
-        getPlaylists(sp, username)
-        #getSavedMusic(sp)
-    """
     oauth = SpotifyOAuth(client_id, client_secret, client_uri, scope=scope, cache_path=cache)
     token = ""
     token_info = oauth.get_cached_token()
@@ -137,20 +120,6 @@ def main():
     if token:
         sp = spotipy.Spotify(auth=token)
         getPlaylists(sp, username)
-        #getSavedMusic(sp)
-
-
-
-'''
-    credentials = SpotifyClientCredentials(client_id=client_id,
-            client_secret=client_secret)
-    token = credentials.get_access_token()
-    sp = spotipy.Spotify(auth=token)
-    sp.trace=False;
-    #sp = spotipy.Spotify(client_credentials_manager=credentials)
-
-    playlists = sp.user_playlists('spotify')
-'''
 
 
 if __name__ == "__main__":
