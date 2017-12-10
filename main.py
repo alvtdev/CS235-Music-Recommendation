@@ -62,7 +62,9 @@ def printTracksToFile(sp, tracks, F):
     while True:
         for item in tracks['items']:
             track = item['track']
-            trackinfo = sp.audio_features(track['uri'])
+            uri = track['uri'].split(":")[2]
+            print uri
+            trackinfo = sp.audio_features(uri)
             pp.pprint(trackinfo)
             """
             #append track data to string, tab separated
