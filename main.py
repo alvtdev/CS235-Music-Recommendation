@@ -58,19 +58,24 @@ def printTrackDetails(sp, tracks):
 def printTracksToFile(sp, tracks, F):
     i = 1
     F.write("Song Name \t Artist Name \t Album Name \t Genres\n")
+    pp = pprint.PrettyPrinter(depth=6)
     while True:
         for item in tracks['items']:
             track = item['track']
+            trackinfo = sp.audio_features(track['uri'])
+            pp.pprint(trackinfo)
+            """
+            #append track data to string, tab separated
             trackdata = track['name'] + "\t" + track['artists'][0]['name']
             trackdata += '\t' + track['album']['name'] + '\t'
             genres = getArtistGenres(track['artists'][0]['uri'], sp)
             genreList = [genre.encode('UTF8') for genre in genres]
             for genre in genres:
                 trackdata += genre + ", " 
-
             trackdata = trackdata[:-1]
             #print trackdata
             F.write(trackdata + "\n")
+            """
             i += 1
         #check if there are more pages
         if tracks['next']:
