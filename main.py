@@ -73,9 +73,12 @@ def printTracksToFile(sp, tracks, F):
             #trackdata += track['album']['name'] + '\t'
             genres = getArtistGenres(track['artists'][0]['uri'], sp)
             genreList = [genre.encode('UTF8') for genre in genres]
-            for genre in genres:
-                trackdata += genre + "," 
-            trackdata = trackdata[:-1] +"\t"
+            if len(genreList) > 0:
+                for genre in genres:
+                    trackdata += genre + "," 
+                trackdata = trackdata[:-1] +"\t"
+            else:
+                trackdata += "none \t"
 
             #append other characteristics from audio_features()
             trackdata += str(trackinfo[0]['acousticness']) + "\t" 
@@ -102,7 +105,7 @@ def printPlaylist(sp, playlist, F):
 
 def getPlaylists(sp, username):
     playlists = sp.user_playlists(username)
-    filename = "playlists-" + username + ".txt"
+    filename = "playlists-" + username + ".tsv"
     F = open(filename, "w")
     while True:
         for playlist in playlists['items']:
