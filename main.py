@@ -57,27 +57,36 @@ def printTrackDetails(sp, tracks):
 #function to generate a comma delimited file with data
 def printTracksToFile(sp, tracks, F):
     i = 1
-    F.write("Song Name \t Artist Name \t Album Name \t Genres\n")
+    dataHeader = "Song Name \t Artist Name \t Genres \t "
+    dataHeader += "Acousticness \t Danceability \t Energy \t"
+    dataHeader += "Instrumentalness \t Liveness \t Speechiness \n"
+    F.write(dataHeader)
     pp = pprint.PrettyPrinter(depth=6)
     while True:
         for item in tracks['items']:
             track = item['track']
-            uri = track['uri'].split(":")[2]
-            print uri
+            uri = [track['uri'].split(":")[2]]
             trackinfo = sp.audio_features(uri)
-            pp.pprint(trackinfo)
-            """
-            #append track data to string, tab separated
-            trackdata = track['name'] + "\t" + track['artists'][0]['name']
-            trackdata += '\t' + track['album']['name'] + '\t'
+
+            #append track metadata to string, tab separated
+            trackdata = track['name'] + "\t" + track['artists'][0]['name'] + "\t"
+            #trackdata += track['album']['name'] + '\t'
             genres = getArtistGenres(track['artists'][0]['uri'], sp)
             genreList = [genre.encode('UTF8') for genre in genres]
             for genre in genres:
-                trackdata += genre + ", " 
-            trackdata = trackdata[:-1]
+                trackdata += genre + "," 
+            trackdata = trackdata[:-1] +"\t"
+
+            #append other characteristics from audio_features()
+            trackdata += str(trackinfo[0]['acousticness']) + "\t" 
+            trackdata += str(trackinfo[0]['danceability']) + "\t" 
+            trackdata += str(trackinfo[0]['energy']) + "\t" 
+            trackdata += str(trackinfo[0]['instrumentalness']) + "\t" 
+            trackdata += str(trackinfo[0]['liveness']) + "\t" 
+            trackdata += str(trackinfo[0]['speechiness']) + "\t" 
+        
             #print trackdata
             F.write(trackdata + "\n")
-            """
             i += 1
         #check if there are more pages
         if tracks['next']:
@@ -112,12 +121,9 @@ def main():
     oauth = SpotifyOAuth(client_id, client_secret, client_uri, scope=scope, cache_path=cache)
     token = ""
     token_info = oauth.get_cached_token()
-    #print "Token info: ",
-    #print token_info
 
     if token_info:
         token = token_info['access_token']
-        #print token
     else:
         url = oauth.get_authorize_url()
         code = oauth.parse_response_code(url)
