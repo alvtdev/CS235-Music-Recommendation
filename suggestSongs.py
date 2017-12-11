@@ -51,7 +51,7 @@ def getSubset(fullSet, index):
     #print subSet
     return subSet
 
-def populateSubsets(trainSet, alpha = 1):
+def populateSubsets(trainSet, alpha = 1.0):
     for row in trainSet[1:]:
         A.append(float(row[acousticness]))
         D.append(float(row[danceability]))
@@ -68,7 +68,7 @@ def populateSubsets(trainSet, alpha = 1):
     return [Astats, Dstats, Estats, Istats, Lstats, Sstats]
 
 #calculate mean and std. dev. from feature statistics
-def calcStats(subSet, alpha = 1):
+def calcStats(subSet, alpha = 1.0):
     #calculate mean
     mean = sum(subSet)/len(subSet)
     #calculate standard deviation
@@ -132,7 +132,7 @@ def main():
     if len(sys.argv) > 3:
         trainFile = sys.argv[1]
         testFile = sys.argv[2]
-        alpha = sys.argv[3]
+        alpha = float(sys.argv[3])
     elif len(sys.argv) > 2:
         trainFile = sys.argv[1]
         testFile = sys.argv[2]
