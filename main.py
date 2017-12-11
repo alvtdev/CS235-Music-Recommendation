@@ -23,7 +23,7 @@ else:
     print "Enter your Spotify username: ",
     username = raw_input()
 
-cache = '.cache-' + username
+cache = '.tokencache'
 
 def getArtistGenres(uri, sp):
     artist = sp.artist(uri)
@@ -61,7 +61,7 @@ def printTracksToFile(sp, tracks, F):
     dataHeader += "Acousticness \t Danceability \t Energy \t"
     dataHeader += "Instrumentalness \t Liveness \t Speechiness \n"
     F.write(dataHeader)
-    pp = pprint.PrettyPrinter(depth=6)
+    #pp = pprint.PrettyPrinter(depth=6)
     while True:
         for item in tracks['items']:
             track = item['track']
@@ -98,7 +98,8 @@ def printTracksToFile(sp, tracks, F):
             break
 
 def printPlaylist(sp, playlist, F):
-    results = sp.user_playlist(playlist['owner']['id'], playlist['id'], fields='tracks,next')
+    results = sp.user_playlist(playlist['owner']['id'], playlist['id'], 
+            fields='tracks,next')
     tracks = results['tracks']
     #printTrackDetails(sp, tracks)
     printTracksToFile(sp, tracks, F)
@@ -121,21 +122,30 @@ def getPlaylists(sp, username):
     F.close()
 
 def main():
-    oauth = SpotifyOAuth(client_id, client_secret, client_uri, scope=scope, cache_path=cache)
+    oauth = SpotifyOAuth(client_id, client_secret, client_uri, scope=scope, 
+            cache_path=cache)
     token = ""
     token_info = oauth.get_cached_token()
 
     if token_info:
         token = token_info['access_token']
     else:
+        #print "GET NEW TOKEN"
         url = oauth.get_authorize_url()
+        #print url
         code = oauth.parse_response_code(url)
+        #print code
         if code:
+            #print "CODE FOUND"
             token_info = oauth.get_access_token(code)
             token = token_info['access_token']
+    #print token_info
     if token:
+        #print "TOKEN FOUND"
         sp = spotipy.Spotify(auth=token)
         getPlaylists(sp, username)
+    else:
+        print "ERROR: TOKEN NOT FOUND"
 
 
 if __name__ == "__main__":
