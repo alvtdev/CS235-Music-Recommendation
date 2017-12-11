@@ -20,7 +20,7 @@ username = ""
 if len(sys.argv) > 1:
     username = sys.argv[1]
 else:
-    print "Enter your Spotify username: ",
+    print("Enter your Spotify username: "),
     username = raw_input()
 
 cache = '.tokencache'
@@ -35,35 +35,10 @@ def getAlbumGenres(uri, sp):
     album = sp.album(uri)
     return album['genres']
 
-def printTrackDetails(sp, tracks):
-    i = 1
-    #dataHeader = "Song Name \t Artist Name \t Genres \t "
-    #dataHeader += "Acousticness \t Danceability \t Energy \t"
-    #dataHeader += "Instrumentalness \t Liveness \t Speechiness \n"
-    #F.write(dataHeader)
-    while True:
-        for item in tracks['items']:
-            track = item['track']
-            print track['name'] + ' - ' + track['artists'][0]['name'] + ' - ',
-            print track['album']['name'] + ' - ',
-            artistURI = track['artists'][0]['uri'];
-            genres = getArtistGenres(artistURI, sp)
-            genreList = [genre.encode('UTF8') for genre in genres]
-            print genreList
-            #song_title = str(i) + '. ' + track['name'] +' - '
-            #song_title += track['artists'][0]['name']
-            #print(song_title)
-            i += 1
-        #check if there are more pages
-        if tracks['next']:
-            tracks = sp.next(tracks)
-        else: 
-            break
-
 #function to generate a comma delimited file with data
 def printTracksToFile(sp, tracks, F):
     i = 1
-    pp = pprint.PrettyPrinter(depth=6)
+    #pp = pprint.PrettyPrinter(depth=6)
     while True:
         for item in tracks['items']:
             track = item['track']
@@ -84,7 +59,7 @@ def printTracksToFile(sp, tracks, F):
                     trackdata = trackdata[:-1] +"\t"
                 else:
                     trackdata += "none \t"
-                #print trackdata + "\n"
+                print(trackdata + "\n")
 
                 #append other characteristics from audio_features()
                 trackdata += str(trackinfo[0]['acousticness']) + "\t" 
@@ -94,14 +69,10 @@ def printTracksToFile(sp, tracks, F):
                 trackdata += str(trackinfo[0]['liveness']) + "\t" 
                 trackdata += str(trackinfo[0]['speechiness']) + "\t" 
             
-                #print trackdata
+                #print trackdata to file
                 F.write(trackdata + "\n")
-            #else:
-                #print "ERROR: ARTIST URI NOT FOUND"
-                #pp.pprint(track)
-                #sys.exit()
             i += 1
-        #check if there are more pages
+        #check if there are more tracks
         if tracks['next']:
             tracks = sp.next(tracks)
         else: 
@@ -111,7 +82,6 @@ def printPlaylist(sp, playlist, F):
     results = sp.user_playlist(playlist['owner']['id'], playlist['id'], 
             fields='tracks,next')
     tracks = results['tracks']
-    #printTrackDetails(sp, tracks)
     printTracksToFile(sp, tracks, F)
 
 def getPlaylists(sp, username):
@@ -125,9 +95,9 @@ def getPlaylists(sp, username):
     while True:
         for playlist in playlists['items']:
             if playlist['name'] is not None:
-                print '\nplaylist: '
+                print('\nplaylist: ')
                 playlist_name = playlist['name']
-                print playlist_name
+                print(playlist_name)
                 printPlaylist(sp, playlist, F)
         if playlists['next']:
             playlists = sp.next(playlists)
@@ -142,24 +112,26 @@ def main():
     token_info = oauth.get_cached_token()
 
     if token_info:
+        #token = token_info['access_token']
+        token_info = oauth.refresh_access_token(token_info['refresh_token']) 
         token = token_info['access_token']
     else:
-        #print "GET NEW TOKEN"
+        #print("GET NEW TOKEN")
         url = oauth.get_authorize_url()
-        #print url
+        #print(url)
         code = oauth.parse_response_code(url)
-        #print code
+        #print(code)
         if code:
-            #print "CODE FOUND"
+            #print("CODE FOUND")
             token_info = oauth.get_access_token(code)
             token = token_info['access_token']
-    #print token_info
+    #print(token_info)
     if token:
-        #print "TOKEN FOUND"
+        #print("TOKEN FOUND")
         sp = spotipy.Spotify(auth=token)
         getPlaylists(sp, username)
     else:
-        print "ERROR: TOKEN NOT FOUND"
+        print("ERROR: TOKEN NOT FOUND") 
 
 
 if __name__ == "__main__":
