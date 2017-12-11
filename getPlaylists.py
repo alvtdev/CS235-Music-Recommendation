@@ -59,7 +59,7 @@ def printTracksToFile(sp, tracks, F):
                     trackdata = trackdata[:-1] +"\t"
                 else:
                     trackdata += "none \t"
-                print(trackdata + "\n")
+                #print(trackdata + "\n")
 
                 #append other characteristics from audio_features()
                 trackdata += str(trackinfo[0]['acousticness']) + "\t" 
@@ -67,7 +67,7 @@ def printTracksToFile(sp, tracks, F):
                 trackdata += str(trackinfo[0]['energy']) + "\t" 
                 trackdata += str(trackinfo[0]['instrumentalness']) + "\t" 
                 trackdata += str(trackinfo[0]['liveness']) + "\t" 
-                trackdata += str(trackinfo[0]['speechiness']) + "\t" 
+                trackdata += str(trackinfo[0]['speechiness'])
             
                 #print trackdata to file
                 F.write(trackdata + "\n")
