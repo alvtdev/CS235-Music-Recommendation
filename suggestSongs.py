@@ -34,6 +34,7 @@ Lstats = []
 Sstats = []
 allStats = []
 
+#read tsv file and append to table
 def readFiles(filename):
     F = open(filename, "r")
     datatable = []
@@ -43,6 +44,7 @@ def readFiles(filename):
         datatable.append(data)
     return datatable
 
+#given a full table, retrieve a specific column
 def getSubset(fullSet, index):
     subSet = []
     for row in fullSet[1:]:
@@ -52,6 +54,7 @@ def getSubset(fullSet, index):
     return subSet
 
 def populateSubsets(trainSet, alpha = 1.0):
+    #populates lists for individual feature arrays
     for row in trainSet[1:]:
         A.append(float(row[acousticness]))
         D.append(float(row[danceability]))
@@ -59,6 +62,7 @@ def populateSubsets(trainSet, alpha = 1.0):
         I.append(float(row[instrumentalness]))
         L.append(float(row[liveness]))
         S.append(float(row[speechiness]))
+    #calculates boundaries for each feature
     Astats = calcStats(A, alpha)
     Dstats = calcStats(D, alpha)
     Estats = calcStats(E, alpha)
@@ -77,7 +81,6 @@ def calcStats(subSet, alpha = 1.0):
         diff.append(pow(i-mean, 2))
     sumdiff = sum(diff)
     stdev = math.sqrt( sumdiff / len(subSet) )
-    #stats = [mean, stdev]
     #calculate lower and upper bounds
     lb = mean - alpha*stdev
     ub = mean + alpha*stdev
@@ -103,12 +106,10 @@ def checkGenre(testGenres, genreList):
     return result
 
 #check value of stats to see if they're within range (calculated by calcStats)
-#return true if more than half of the stats are in range (default=1 std. dev.)
+#return true if more than half of the stats are in range (default=0.5 std. dev.)
 def checkStats(tsRow, allStats):
     statCount = 0
     for i in range(0, len(tsRow)):
-        #print str(i) + "-" + str(tsRow[i]) + " - ",
-        #print str(allStats[i][0]) + " - " + str(allStats[i][1])
         if allStats[i][0] < float(tsRow[i]) < allStats[i][1]:
             statCount += 1
 
@@ -117,18 +118,25 @@ def checkStats(tsRow, allStats):
     else:
         return False
 
+#iterate through testSet, comparing audio feature values to 
+# calculated statistics, recommend if within 0.5 std. dev. and 
+# song genre is in compiled genre list
+# Also print to file
 def genMusicList(testSet, allStats, genreList):
-    #TODO: iterate through testSet, comparing audio feature values to 
-    #calculated statistics, recommend if within 1 std. dev.
+    F = open("RecommendedSongs.txt", "w")
     for row in testSet[1:]:
         testGenres = row[2].split(",")
         tsRow = row[3:]
         if checkGenre(testGenres, genreList) and checkStats(tsRow, allStats):
             print row[0] + " - " + row[1]
+            F.write(row[0] + " - " + row[1] + "\n")
+    F.close()
     return
 
 def main():
     alpha = 0.0
+    #command line parameter checking
+    #options: <trainingSetFile> <testSetFile> <alpha>
     if len(sys.argv) > 3:
         trainFile = sys.argv[1]
         testFile = sys.argv[2]
@@ -142,11 +150,12 @@ def main():
         print "(both trainingSetFile and testSetFile must be .tsv)"
         sys.exit()
 
-    #print "trainFile = " + trainFile + "\n testFile = " + testFile
-    pp = pprint.PrettyPrinter(depth=6)
+    #read files and store contents in individual sets
     trainSet = readFiles(trainFile)
     testSet = readFiles(testFile)
+    #generate a table of stats from audio features
     allStats = populateSubsets(trainSet, alpha)
+    #compile a list of all genres present in the training set
     genreList = getGenres(trainSet)
     genMusicList(testSet, allStats, genreList)
 

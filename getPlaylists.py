@@ -20,6 +20,7 @@ client_uri = "http://localhost/"
 cache = ""
 username = "" 
 
+#initial input checking
 if len(sys.argv) > 1:
     username = sys.argv[1]
 else:
@@ -28,12 +29,12 @@ else:
 
 cache = '.tokencache'
 
+#get spotify artist uri 
 def getArtistGenres(uri, sp):
-    #print "Artist uri: ",
-    #print uri
     artist = sp.artist(uri)
     return artist['genres']
 
+#get album genres given uri
 def getAlbumGenres(uri, sp):
     album = sp.album(uri)
     return album['genres']
@@ -41,7 +42,6 @@ def getAlbumGenres(uri, sp):
 #function to generate a comma delimited file with data
 def printTracksToFile(sp, tracks, F):
     i = 1
-    #pp = pprint.PrettyPrinter(depth=6)
     while True:
         for item in tracks['items']:
             track = item['track']
@@ -62,7 +62,6 @@ def printTracksToFile(sp, tracks, F):
                     trackdata = trackdata[:-1] +"\t"
                 else:
                     trackdata += "none \t"
-                #print(trackdata + "\n")
 
                 #append other characteristics from audio_features()
                 trackdata += str(trackinfo[0]['acousticness']) + "\t" 
@@ -81,20 +80,26 @@ def printTracksToFile(sp, tracks, F):
         else: 
             break
 
+#intermediate function that calls printTracksToFile for a given playlist
 def printPlaylist(sp, playlist, F):
     results = sp.user_playlist(playlist['owner']['id'], playlist['id'], 
             fields='tracks,next')
     tracks = results['tracks']
     printTracksToFile(sp, tracks, F)
 
+#function that goes through a user's playlists and calls other helper
+#helper functions to print the contents to file 
 def getPlaylists(sp, username):
     playlists = sp.user_playlists(username)
+    #custom tsv name
     filename = "playlists-" + username + ".tsv"
+    #print tsv header
     F = open(filename, "w")
     dataHeader = "Song Name \t Artist Name \t Genres \t "
     dataHeader += "Acousticness \t Danceability \t Energy \t"
     dataHeader += "Instrumentalness \t Liveness \t Speechiness \n"
     F.write(dataHeader)
+    #iterate through playlists and print them to file
     while True:
         for playlist in playlists['items']:
             if playlist['name'] is not None:
@@ -102,6 +107,7 @@ def getPlaylists(sp, username):
                 playlist_name = playlist['name']
                 print(playlist_name)
                 printPlaylist(sp, playlist, F)
+        #check if there are any more playlists
         if playlists['next']:
             playlists = sp.next(playlists)
         else:
@@ -109,8 +115,10 @@ def getPlaylists(sp, username):
     F.close()
 
 def main():
+    #program authentication
     oauth = SpotifyOAuth(client_id, client_secret, client_uri, scope=scope, 
             cache_path=cache)
+    #obtain authentication token
     token = ""
     token_info = oauth.get_cached_token()
 
@@ -118,6 +126,8 @@ def main():
         #token = token_info['access_token']
         token_info = oauth.refresh_access_token(token_info['refresh_token']) 
         token = token_info['access_token']
+
+    #FIXME: program authentication when no tokens have been used before
     else:
         #print("GET NEW TOKEN")
         url = oauth.get_authorize_url()
@@ -128,9 +138,9 @@ def main():
             #print("CODE FOUND")
             token_info = oauth.get_access_token(code)
             token = token_info['access_token']
-    #print(token_info)
+
+    #if authentication token exists, crawl and create dataset
     if token:
-        #print("TOKEN FOUND")
         sp = spotipy.Spotify(auth=token)
         getPlaylists(sp, username)
     else:
