@@ -11,9 +11,12 @@ import json
 playlistsfile = "plsongs.tsv"
 topsongsfile = "topsongs.txt"
 scope = 'user-library-read'
-client_id = os.getenv('SPOTIPY_CLIENT_ID')
-client_secret = os.getenv('SPOTIPY_CLIENT_SECRET')
-client_uri = os.getenv('SPOTIPY_REDIRECT_URI')
+#client_id = os.getenv('SPOTIPY_CLIENT_ID')
+client_id = "c99e7cb3f74441b4be09fa5e6406055e"
+#client_secret = os.getenv('SPOTIPY_CLIENT_SECRET')
+client_secret = "373e4b91a7b74bdab6dc02bfa8236a03"
+#client_uri = os.getenv('SPOTIPY_REDIRECT_URI')
+client_uri = "http://localhost/"
 cache = ""
 username = "" 
 

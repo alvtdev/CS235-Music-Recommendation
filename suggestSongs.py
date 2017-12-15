@@ -112,7 +112,7 @@ def checkStats(tsRow, allStats):
         if allStats[i][0] < float(tsRow[i]) < allStats[i][1]:
             statCount += 1
 
-    if statCount >= 3:
+    if statCount >= 4:
         return True
     else:
         return False
