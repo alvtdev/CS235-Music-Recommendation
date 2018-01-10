@@ -100,10 +100,11 @@ def getPlaylists(sp, username):
     dataHeader += "Instrumentalness \t Liveness \t Speechiness \n"
     F.write(dataHeader)
     #iterate through playlists and print them to file
+    print("Getting Data...")
     while True:
         for playlist in playlists['items']:
             if playlist['name'] is not None:
-                print('\nplaylist: ')
+                print('playlist: '),
                 playlist_name = playlist['name']
                 print(playlist_name)
                 printPlaylist(sp, playlist, F)
