@@ -123,7 +123,7 @@ def checkStats(tsRow, allStats):
 # song genre is in compiled genre list
 # Also print to file
 def genMusicList(testSet, allStats, genreList):
-    F = open("RecommendedSongs.txt", "w")
+    F = open("recommendedSongs.txt", "w")
     for row in testSet[1:]:
         testGenres = row[2].split(",")
         tsRow = row[3:]

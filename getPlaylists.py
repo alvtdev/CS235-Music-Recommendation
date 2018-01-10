@@ -27,7 +27,7 @@ else:
     print("Enter your Spotify username: "),
     username = raw_input()
 
-cache = '.tokencache'
+#cache = '.tokencache'
 
 #get spotify artist uri 
 def getArtistGenres(uri, sp):
@@ -116,6 +116,7 @@ def getPlaylists(sp, username):
 
 def main():
     #program authentication
+    cache = ".cache-" + username
     oauth = SpotifyOAuth(client_id, client_secret, client_uri, scope=scope, 
             cache_path=cache)
     #obtain authentication token
@@ -126,18 +127,9 @@ def main():
         #token = token_info['access_token']
         token_info = oauth.refresh_access_token(token_info['refresh_token']) 
         token = token_info['access_token']
-
     #FIXME: program authentication when no tokens have been used before
     else:
-        #print("GET NEW TOKEN")
-        url = oauth.get_authorize_url()
-        #print(url)
-        code = oauth.parse_response_code(url)
-        #print(code)
-        if code:
-            #print("CODE FOUND")
-            token_info = oauth.get_access_token(code)
-            token = token_info['access_token']
+        token = util.prompt_for_user_token(username, scope)
 
     #if authentication token exists, crawl and create dataset
     if token:
